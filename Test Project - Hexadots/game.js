@@ -15,7 +15,7 @@ window.onload = function() {
         type: Phaser.AUTO,
         scale: {
             mode: Phaser.Scale.FIT,
-            autoCenter: Phaser. Scale.CENTER_BOTH,
+//            autoCenter: Phaser. Scale.CENTER_BOTH,
             parent: 'thegame',
             width: 600,
             height: 800
@@ -60,6 +60,25 @@ class playGame extends Phaser.Scene{
 
 // Function that allows pointer to click on tiles and draw
 
+class draw{
+    constructor(obj){
+        if(obj == undefined){
+            obj = {}
+        }
+        this.rows = (obj.rows != undefined) ? obj.rows : 8;
+        this.columns = (obj.columns != undefined) ? obj.columns : 7;
+        this.items = (obj.items != undefined) ? obj.items : 6;
+        this.chain = [];
+    }
+    
+    //returns rows in board
+    getRows(){
+        return this.rows;
+    }
+    
+    //returns columns in board
+}
+
 
 // Backtrack function for drawing
 
@@ -69,3 +88,4 @@ class playGame extends Phaser.Scene{
 
 // Function that tells remaining tiles how to move into empty spaces
 
+    
