@@ -1,12 +1,12 @@
 // Constructs game environment
 let game;
 let gameSettings = {
-    hexSize: 75,
+    hexSize: 71,
     fallSpeed: 100,
     destroySpeed: 200,
     boardOffset: {
-        x: 100,
-        y: 50
+        x: 87,
+        y: 150
     }
 }
 
@@ -33,11 +33,11 @@ class playGame extends Phaser.Scene{
         super('PlayGame');
     }
     preload(){
-        this.load.spritesheet('hexagons', 'assets/Hexagon_Spritesheet.json', {
+        this.load.spritesheet('hexagons', 'Assets/Hexagons.png', {
             frameWidth: gameSettings.hexSize,
             frameHeight: gameSettings.hexSize
-        });
-        this.load.image('line', 'assets/Line.png')
+        })
+        this.load.image('line', 'Assets/Line.png')
     }
     create(){
         this.canPick = true;
@@ -63,11 +63,15 @@ class playGame extends Phaser.Scene{
         for(let i = 0; i < this.draw.getRows(); i++){
             this.arrowArray[i] = [];
             for(let j = 0; j < this.draw.getColumns(); j++){
-                let posX = gameSettings.boardOffset.x + gameSettings.hexSize * j + gameSettings.hexSize / 2;
-                let posY = gameSettings.boardOffset.y + gameSettings.hexSize * i + gameSettings.hexSize / 2;
+                if(i % 2 == 0) {
+                    var posX = gameSettings.boardOffset.x + gameSettings.hexSize * j + gameSettings.hexSize;
+                } else{
+                    var posX = gameSettings.boardOffset.x + gameSettings.hexSize * j + gameSettings.hexSize / 2;
+                }
+                let posY = gameSettings.boardOffset.y + gameSettings.hexSize * i/1.25 + gameSettings.hexSize / 2;
 
                 let hex = this.add.sprite(posX, posY, 'hexagons', this.draw.valueAt(i, j));
-                let arrow = this.add.sprite(posX, posY, 'line');
+                let line = this.add.sprite(posX, posY, 'line');
                 line.setDepth(2);
                 line.visible = false;
                 this.arrowArray[i][j] = line;
@@ -75,10 +79,78 @@ class playGame extends Phaser.Scene{
             }
         }
     }
+    
+    //Retrieves position of tile clicked on
+    hexSelect(pointer){
+        if(this.canPick){
+            let row = Math.floor((pointer.y - gameSettings.boardOffset.y) / gameSettings.hexSize);
+            let col = Math.floor((pointer.x - gameSettings.boardOffset.x) / gameSettings.hexSize);
+            if(this.draw.validPick(row, col)){
+                this.canPick = false;
+                this.draw.putInChain(row, col)
+                this.draw.customDataOf(row, col).alpha  = 0.5;
+                this.dragging = true;
+            }
+        }
+    }
+    
+    //draws path after click
+    drawPath(pointer){
+        if(this.dragging){
+            let row = Math.floor((pointer.y - gameSettings.boardOffset.y) / gameSettings.hexSize);
+            let col = Math.floor((pointer.x - gameSettings.boardOffset.x) / gameSettings.hexSize);
+            if(this.draw.validPick(row, col)){
+                let distance = Phaser.Math.Distance.Between(pointer.x, pointer.y, this.draw.customDataOf(row, col).x, this.draw.customDataOf(row, col).y);
+                if(distance < gameSettings.gemSize * 0.4){
+                    if(this.draw.continuesChain(row, col)){
+                        this.draw.customDataOf(row, col).alpha = 0.5;
+                        this.draw.putInChain(row, col);
+                        this.displayPath()
+                    }
+                }
+            }
+        }
+    }
+    
+    //removes hexes in chain
+    removeHex(){
+        if(this.dragging){
+            this.hidePath();
+            this.dragging = false;
+            if(this.draw.getChainLength() < 3){
+                let chain = this.draw.emptyChain();
+                chain.forEach(function(item){
+                    this.draw.customDataOf(item.row, item.column).alpha = 1;
+                }.bind(this));
+                this.canPick = true;
+            }
+            else{
+                let hexToRemove = this.draw.destroyChain();
+                let destroyed = 0;
+                hexToRemove.forEach(function(hex){
+                    this.poolArray.push(this.draw.customDataOf(hex.row, hex.column))
+                    destroyed ++;
+                    this.tweens.add({
+                        targets:
+                        this.draw.customDataOf(hex.row, hex.column),
+                        alpha: 0,
+                        duration: gameSettings.destroySpeed,
+                        callbackScope: this,
+                        onComplete: function(event, sprite){
+                            destroyed --;
+                            if(destroyed == 0){
+                               this.makeHexFall();
+                            }
+                        }
+                    });
+                }.bind(this));
+            }
+        }
+    }
 }
 
 
-// Function that allows pointer to click on tiles and draw
+//Function that allows pointer to click on tiles and draw
 
 class draw{
     constructor(obj){
@@ -118,9 +190,11 @@ class draw{
         }
     }
     
-    //returns true if item at (row, column) is valid
+    //returns true if item at (row, column) is defined in the generated field
     validPick(row, column){
-        return row >= 0 &amp;&amp; row < this.getRows() &amp;&amp; column >= 0 &amp;&amp; this.gameArray[row] != undefined &amp;&amp; this.gameArray[row][column] != undefined;
+        return row >= 0 && row < this.getRows()
+        && column >= 0 &&
+        this.gameArray[row] != undefined && this.gameArray[row][column] != undefined;
     }
     
     //returns value of item at (row, column)
@@ -129,6 +203,24 @@ class draw{
             return false;
         }
         return this.gameArray[row][column].value;
+    }
+    
+    //gives each item at (row, column) custom data
+    setCustomData(row, column, customData) {
+        this.gameArray[row][column].customData = customData;
+    }
+    
+    //returns custom data of item at (row, column)
+    customDataOf(row, column){
+        return this.gameArray[row][column].customData;
+    }
+    
+    //puts item at (row, column) in draw chain
+    putInChain(row, column){
+        this.chain.push({
+            row: row,
+            column: column
+        })
     }
 }
 

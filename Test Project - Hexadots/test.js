@@ -1,6 +1,6 @@
 let game;
 let gameOptions = {
-    gemSize: 100,
+    gemSize: 60,
     fallSpeed: 100,
     destroySpeed: 200,
     boardOffset: {

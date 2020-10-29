@@ -1,22 +1,21 @@
-// Constructs game environment
 let game;
-let gameSettings = {
+let gameOptions = {
     hexSize: 75,
     fallSpeed: 100,
     destroySpeed: 200,
     boardOffset: {
         x: 100,
-        y: 200
+        y: 50
     }
 }
 
-window.onload = function() {
+window.onload = function(){
     let gameConfig = {
         type: Phaser.AUTO,
         scale: {
             mode: Phaser.Scale.FIT,
-//            autoCenter: Phaser. Scale.CENTER_BOTH,
-            parent: 'thegame',
+//            autoCenter: Phaser.Scale.CENTER_BOTH,
+            parent: "thegame",
             width: 600,
             height: 800
         },
@@ -26,66 +25,30 @@ window.onload = function() {
     window.focus();
 }
 
-// Constructor for game scene to test functions in
-
 class playGame extends Phaser.Scene{
     constructor(){
         super('PlayGame');
     }
+    
     preload(){
-        this.load.spritesheet('hexagons', 'assets/Hexagon_Spritesheet.json', {
-            frameWidth: gameSettings.hexSize,
-            frameHeight: gameSettings.hexSize
+        this.load.image('black_hexagon', 'Assets/Black_Hex.png', {
+            frameWidth: gameOptions.hexSize,
+            frameHeight: gameOptions.hexSize
         });
-        this.load.image('line', 'assets/Line.png')
+        this.load.atlas('hexagons', 'Assets/Hexagon_Spritesheet.png', 'Assets/Hexagon_Spritesheet.json')
+        this.load.image('line', 'Assets/Line.png',{
+            frameWidth: 10,
+            frameHeight: gameOptions.hexSize *3
+        });
     }
+    
     create(){
-        this.canPick = true;
-        this.dragging = false;
-        this.draw = new draw({
-            rows: 6,
-            columns: 6,
-            items: 5
-        });
-        this.draw.generateField();
-        this.drawField();
-        this.input.on('pointerdown', this.hexSelect, this);
-        this.input.on('pointermove', this.drawPath, this);
-        this.input.on('pointerup', this.removeHex, this);
+        this.add.image(300, 400, 'black_hexagon').setScale(.1);
+        this.add.image(400, 400, 'black_hexagon').setScale(.1);
+        this.make.sprite({
+            x: 100,
+            y: 100,
+            key: 'hexagons'
+        }).setScale(.1);
     }
 }
-
-// Horizontal and vertical array for game grid that randomly generates tiles
-
-
-// Function that allows pointer to click on tiles and draw
-
-class draw{
-    constructor(obj){
-        if(obj == undefined){
-            obj = {}
-        }
-        this.rows = (obj.rows != undefined) ? obj.rows : 8;
-        this.columns = (obj.columns != undefined) ? obj.columns : 7;
-        this.items = (obj.items != undefined) ? obj.items : 6;
-        this.chain = [];
-    }
-    
-    //returns rows in board
-    getRows(){
-        return this.rows;
-    }
-    
-    //returns columns in board
-}
-
-
-// Backtrack function for drawing
-
-
-// Destroy function that gets rid of tiles if conditions are met
-
-
-// Function that tells remaining tiles how to move into empty spaces
-
-    
